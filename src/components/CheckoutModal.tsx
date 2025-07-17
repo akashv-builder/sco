@@ -24,15 +24,29 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [showBill, setShowBill] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [receiptDownloaded, setReceiptDownloaded] = useState(false);
+  const [isPrimeMember] = useState(true); // Simulate Prime membership
+  const [primeDiscountApplied, setPrimeDiscountApplied] = useState(false);
 
   if (!isOpen) return null;
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-  const tax = subtotal * 0.0875; // 8.75% tax
-  const shipping = subtotal > 35 ? 0 : 5.99; // Free shipping over $35
+  
+  // Prime benefits
+  const primeDiscount = isPrimeMember && primeDiscountApplied ? subtotal * 0.05 : 0; // 5% Prime discount
+  const primeShipping = isPrimeMember ? 0 : (subtotal > 35 ? 0 : 5.99); // Free shipping for Prime
+  const primeTax = isPrimeMember ? (subtotal - primeDiscount) * 0.0875 : subtotal * 0.0875; // Tax after Prime discount
+  
+  const tax = primeTax;
+  const shipping = primeShipping;
   const couponDiscount = appliedCoupon ? (subtotal * appliedCoupon.discount / 100) : 0;
-  const total = subtotal + tax + shipping - couponDiscount;
+  const total = subtotal + tax + shipping - couponDiscount - primeDiscount;
   const orderNumber = `AMZ-${Date.now().toString().slice(-8)}`;
+
+  const handleApplyPrimeDiscount = () => {
+    if (isPrimeMember && !primeDiscountApplied) {
+      setPrimeDiscountApplied(true);
+    }
+  };
 
   const handleApplyCoupon = () => {
     const validCoupons = {
