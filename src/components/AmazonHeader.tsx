@@ -1,7 +1,46 @@
 import React from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Camera, Mic, MapPin } from 'lucide-react';
 
 const AmazonHeader: React.FC = () => {
+  const [hasActiveSession, setHasActiveSession] = useState(false);
+
+  useEffect(() => {
+    const checkSession = () => {
+      try {
+        const saved = localStorage.getItem('amazonSession');
+        if (saved) {
+          const session = JSON.parse(saved);
+          const now = Date.now();
+          const sessionAge = now - session.timestamp;
+          const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+          
+          setHasActiveSession(
+            sessionAge < maxAge && 
+            (session.hasActiveSession || session.cartItems.length > 0) &&
+            session.cartItems.length > 0
+          );
+        } else {
+          setHasActiveSession(false);
+        }
+      } catch (error) {
+        setHasActiveSession(false);
+      }
+    };
+
+    checkSession();
+    
+    // Listen for storage changes to update session status
+    const handleStorageChange = () => {
+      checkSession();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(checkSession, 10000); // Check every 10 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-amazon-dark text-white">
       {/* Top Status Bar */}
@@ -41,7 +80,12 @@ const AmazonHeader: React.FC = () => {
             <span className="text-lg">🔔</span>
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
           </div>
-          <span className="text-lg">🛒</span>
+          <div className="relative">
+            <span className="text-lg">🛒</span>
+            {hasActiveSession && (
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -52,6 +96,11 @@ const AmazonHeader: React.FC = () => {
           <span className="text-gray-200">Deliver to</span>
           <span className="ml-1 font-medium">John - New York 10001</span>
           <span className="ml-1 text-gray-300">▼</span>
+          {hasActiveSession && (
+            <div className="ml-2 bg-green-500 text-white px-2 py-0.5 rounded-full text-xs font-medium animate-pulse">
+              Session Active
+            </div>
+          )}
         </div>
       </div>
 

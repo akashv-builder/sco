@@ -1,6 +1,57 @@
 import React from 'react';
+import { useEffect, useState } from 'react';
+import { ShoppingCart, Clock } from 'lucide-react';
 
 const AmazonContent: React.FC = () => {
+  const [savedSession, setSavedSession] = useState<any>(null);
+
+  useEffect(() => {
+    const checkSavedSession = () => {
+      try {
+        const saved = localStorage.getItem('amazonSession');
+        if (saved) {
+          const session = JSON.parse(saved);
+          const now = Date.now();
+          const sessionAge = now - session.timestamp;
+          const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+          
+          if (sessionAge < maxAge && session.cartItems.length > 0) {
+            setSavedSession(session);
+          } else {
+            setSavedSession(null);
+          }
+        } else {
+          setSavedSession(null);
+        }
+      } catch (error) {
+        setSavedSession(null);
+      }
+    };
+
+    checkSavedSession();
+    const interval = setInterval(checkSavedSession, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleResumeFromBanner = () => {
+    try {
+      const saved = localStorage.getItem('amazonSession');
+      if (saved) {
+        const session = JSON.parse(saved);
+        const now = Date.now();
+        const sessionAge = now - session.timestamp;
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        
+        if (sessionAge < maxAge && session.cartItems.length > 0) {
+          // Trigger the session resume modal by dispatching a custom event
+          window.dispatchEvent(new CustomEvent('resumeSession'));
+        }
+      }
+    } catch (error) {
+      console.error('Error resuming session:', error);
+    }
+  };
+
   return (
     <div className="flex-1 bg-gray-100 overflow-y-auto">
       {/* Category Navigation */}
@@ -16,6 +67,50 @@ const AmazonContent: React.FC = () => {
           <CategoryTab label="Books" />
         </div>
       </div>
+
+      {/* Session Resume Banner */}
+      {savedSession && (
+        <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 mx-4 mt-4 rounded-lg shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center mb-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-2"></div>
+                <span className="text-sm font-medium">Resume Shopping Session</span>
+              </div>
+              <div className="flex items-center space-x-2 mb-2">
+                <ShoppingCart className="w-4 h-4" />
+                <span className="text-sm">
+                  {savedSession.cartItems.reduce((sum: number, item: any) => sum + item.quantity, 0)} items in cart
+                </span>
+                <span className="text-sm opacity-75">•</span>
+                <Clock className="w-4 h-4" />
+                <span className="text-sm opacity-75">
+                  {(() => {
+                    const timeDiff = Date.now() - savedSession.timestamp;
+                    const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                    return hours > 0 ? `${hours}h ${minutes}m ago` : `${minutes}m ago`;
+                  })()}
+                </span>
+              </div>
+              <div className="text-lg font-bold mb-2">
+                ${savedSession.cartItems.reduce((sum: number, item: any) => sum + (item.product.price * item.quantity), 0).toFixed(2)}
+              </div>
+              <button
+                onClick={handleResumeFromBanner}
+                className="bg-white text-green-700 px-4 py-2 rounded text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                Continue Shopping
+              </button>
+            </div>
+            <div className="ml-4">
+              <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <ShoppingCart className="w-8 h-8" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Prime Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 mx-4 mt-4 rounded-lg shadow-sm">

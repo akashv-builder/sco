@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import AmazonHeader from './components/AmazonHeader';
 import AmazonContent from './components/AmazonContent';
 import BottomNavigation from './components/BottomNavigation';
@@ -7,7 +8,14 @@ import StoreSessionModal from './components/StoreSessionModal';
 import ScanModal from './components/ScanModal';
 import CartModal from './components/CartModal';
 import CheckoutModal from './components/CheckoutModal';
+import SessionResumeModal from './components/SessionResumeModal';
 import { CartItem } from './types';
+
+interface SavedSession {
+  cartItems: CartItem[];
+  hasActiveSession: boolean;
+  timestamp: number;
+}
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -17,7 +25,64 @@ function App() {
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isSessionResumeModalOpen, setIsSessionResumeModalOpen] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [savedSession, setSavedSession] = useState<SavedSession | null>(null);
+
+  // Load saved session on app start
+  useEffect(() => {
+    const loadSavedSession = () => {
+      try {
+        const saved = localStorage.getItem('amazonSession');
+        if (saved) {
+          const session: SavedSession = JSON.parse(saved);
+          const now = Date.now();
+          const sessionAge = now - session.timestamp;
+          const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+          
+          if (sessionAge < maxAge && session.cartItems.length > 0) {
+            setSavedSession(session);
+            setIsSessionResumeModalOpen(true);
+          } else {
+            // Clear expired session
+            localStorage.removeItem('amazonSession');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved session:', error);
+        localStorage.removeItem('amazonSession');
+      }
+    };
+
+    loadSavedSession();
+
+    // Listen for resume session events from banner
+    const handleResumeEvent = () => {
+      const saved = localStorage.getItem('amazonSession');
+      if (saved) {
+        const session: SavedSession = JSON.parse(saved);
+        setSavedSession(session);
+        setIsSessionResumeModalOpen(true);
+      }
+    };
+
+    window.addEventListener('resumeSession', handleResumeEvent);
+    return () => window.removeEventListener('resumeSession', handleResumeEvent);
+  }, []);
+
+  // Save session whenever cart or session state changes
+  useEffect(() => {
+    if (cartItems.length > 0 || hasActiveSession) {
+      const session: SavedSession = {
+        cartItems,
+        hasActiveSession,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('amazonSession', JSON.stringify(session));
+    } else {
+      localStorage.removeItem('amazonSession');
+    }
+  }, [cartItems, hasActiveSession]);
 
   const handleAddToCart = (newItem: CartItem) => {
     setCartItems(prev => {
@@ -84,14 +149,36 @@ function App() {
   const handleOrderComplete = () => {
     setCartItems([]);
     setHasActiveSession(false);
+    localStorage.removeItem('amazonSession');
     setIsCheckoutModalOpen(false);
+    setActiveTab('home');
+  };
+
+  const handleResumeSession = () => {
+    if (savedSession) {
+      setCartItems(savedSession.cartItems);
+      setHasActiveSession(savedSession.hasActiveSession);
+      setActiveTab('home');
+    }
+    setIsSessionResumeModalOpen(false);
+    setSavedSession(null);
+    // Open scan modal directly for continuing shopping
+    setIsScanModalOpen(true);
+  };
+
+  const handleStartFresh = () => {
+    localStorage.removeItem('amazonSession');
+    setCartItems([]);
+    setHasActiveSession(false);
+    setIsSessionResumeModalOpen(false);
+    setSavedSession(null);
     setActiveTab('home');
   };
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col relative max-w-md mx-auto">
+    <div className="min-h-screen bg-gray-50 flex flex-col relative max-w-md mx-auto overflow-hidden">
       <AmazonHeader />
       <AmazonContent />
       
@@ -136,6 +223,14 @@ function App() {
         onClose={() => setIsCheckoutModalOpen(false)}
         cartItems={cartItems}
         onOrderComplete={handleOrderComplete}
+      />
+
+      <SessionResumeModal
+        isOpen={isSessionResumeModalOpen}
+        onClose={() => setIsSessionResumeModalOpen(false)}
+        savedSession={savedSession}
+        onResumeSession={handleResumeSession}
+        onStartFresh={handleStartFresh}
       />
     </div>
   );

@@ -15,7 +15,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
   onMoreClick
 }) => {
   return (
-    <div className="bg-white border-t border-gray-300 px-2 py-2 shadow-lg backdrop-blur-sm fixed bottom-0 left-0 right-0 z-40">
+    <div className="bg-white border-t border-gray-300 px-2 py-2 shadow-lg backdrop-blur-sm fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto">
       <div className="flex items-center justify-around">
         <NavItem
           icon={Home}

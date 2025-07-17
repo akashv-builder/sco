@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, CreditCard, CheckCircle, Smartphone, Gift, Download, Mail, Check, FileText } from 'lucide-react';
+import { X, CreditCard, CheckCircle, Smartphone, Gift, Download, Mail, Check, FileText, QrCode } from 'lucide-react';
 import { CartItem } from '../types';
 import jsPDF from 'jspdf';
 
@@ -163,6 +163,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const paymentMethods = [
     { id: 'amazon-pay', name: 'Amazon Pay', icon: '💳', description: 'Balance: $247.83' },
     { id: 'credit-card', name: 'Credit Card', icon: '💳', description: '**** **** **** 1234' },
+    { id: 'snap-ebt', name: 'SNAP EBT', icon: '🍎', description: 'EBT Balance: $156.42' },
     { id: 'apple-pay', name: 'Apple Pay', icon: '📱', description: 'Touch ID or Face ID' },
     { id: 'amazon-voucher', name: 'Amazon Gift Card', icon: '🎁', description: 'Enter gift card code' }
   ];
@@ -200,7 +201,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
               )}
 
               {/* Download Receipt Button */}
-              <div className="flex space-x-3">
+              <div className="flex space-x-3 mb-6">
                 <button
                   onClick={handleDownloadReceipt}
                   className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-lg font-medium transition-colors ${
@@ -221,6 +222,54 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </>
                   )}
                 </button>
+              </div>
+
+              {/* QR Code for Checkout */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-center">
+                <h3 className="font-semibold mb-3 flex items-center justify-center">
+                  <QrCode className="w-5 h-5 mr-2 text-amazon-orange" />
+                  Checkout QR Code
+                </h3>
+                <div className="bg-white rounded-lg p-4 inline-block shadow-sm border">
+                  <div className="w-32 h-32 bg-black relative">
+                    {/* QR Code Pattern - Simplified representation */}
+                    <div className="absolute inset-0 grid grid-cols-8 grid-rows-8 gap-px p-1">
+                      {/* Corner markers */}
+                      <div className="bg-white col-span-3 row-span-3 border-2 border-black">
+                        <div className="w-full h-full bg-black m-1"></div>
+                      </div>
+                      <div className="bg-white"></div>
+                      <div className="bg-white"></div>
+                      <div className="bg-white col-span-3 row-span-3 border-2 border-black">
+                        <div className="w-full h-full bg-black m-1"></div>
+                      </div>
+                      
+                      {/* Data pattern - simplified */}
+                      {Array.from({ length: 40 }, (_, i) => (
+                        <div 
+                          key={i} 
+                          className={`${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`}
+                        ></div>
+                      ))}
+                      
+                      {/* Bottom left corner */}
+                      <div className="bg-white col-span-3 row-span-3 border-2 border-black">
+                        <div className="w-full h-full bg-black m-1"></div>
+                      </div>
+                      <div className="bg-white"></div>
+                      <div className="bg-white"></div>
+                      <div className="bg-white"></div>
+                      <div className="bg-white"></div>
+                      <div className="bg-white"></div>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-600 mt-3">
+                  Scan this code at store exit for verification
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Order #{orderNumber}
+                </p>
               </div>
 
               <div className="text-center border-b pb-4">
