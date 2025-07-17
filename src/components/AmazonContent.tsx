@@ -29,8 +29,30 @@ const AmazonContent: React.FC = () => {
     };
 
     checkSavedSession();
-    const interval = setInterval(checkSavedSession, 10000); // Check every 10 seconds
-    return () => clearInterval(interval);
+    
+    // Listen for storage changes to update immediately
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'amazonSession') {
+        checkSavedSession();
+      }
+    };
+    
+    // Listen for custom events from the app
+    const handleSessionUpdate = () => {
+      checkSavedSession();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('sessionUpdated', handleSessionUpdate);
+    
+    // Check periodically but less frequently
+    const interval = setInterval(checkSavedSession, 30000); // Check every 30 seconds
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('sessionUpdated', handleSessionUpdate);
+    };
   }, []);
 
   const handleResumeFromBanner = () => {

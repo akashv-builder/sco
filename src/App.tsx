@@ -82,6 +82,9 @@ function App() {
     } else {
       localStorage.removeItem('amazonSession');
     }
+    
+    // Dispatch custom event to notify components of session changes
+    window.dispatchEvent(new CustomEvent('sessionUpdated'));
   }, [cartItems, hasActiveSession]);
 
   const handleAddToCart = (newItem: CartItem) => {
@@ -150,6 +153,8 @@ function App() {
     setCartItems([]);
     setHasActiveSession(false);
     localStorage.removeItem('amazonSession');
+    // Dispatch event to immediately update session banner
+    window.dispatchEvent(new CustomEvent('sessionUpdated'));
     setIsCheckoutModalOpen(false);
     setActiveTab('home');
   };
@@ -170,6 +175,8 @@ function App() {
     localStorage.removeItem('amazonSession');
     setCartItems([]);
     setHasActiveSession(false);
+    // Dispatch event to immediately update session banner
+    window.dispatchEvent(new CustomEvent('sessionUpdated'));
     setIsSessionResumeModalOpen(false);
     setSavedSession(null);
     setActiveTab('home');
