@@ -150,11 +150,17 @@ function App() {
   };
 
   const handleOrderComplete = () => {
+    // Clear session state immediately
     setCartItems([]);
     setHasActiveSession(false);
+    
+    // Remove from localStorage
     localStorage.removeItem('amazonSession');
-    // Dispatch event to immediately update session banner
+    
+    // Dispatch event immediately to update all components
     window.dispatchEvent(new CustomEvent('sessionUpdated'));
+    
+    // Close modal and reset tab
     setIsCheckoutModalOpen(false);
     setActiveTab('home');
   };
@@ -172,11 +178,17 @@ function App() {
   };
 
   const handleStartFresh = () => {
-    localStorage.removeItem('amazonSession');
+    // Clear session state immediately
     setCartItems([]);
     setHasActiveSession(false);
-    // Dispatch event to immediately update session banner
+    
+    // Remove from localStorage
+    localStorage.removeItem('amazonSession');
+    
+    // Dispatch event immediately to update all components
     window.dispatchEvent(new CustomEvent('sessionUpdated'));
+    
+    // Close modal and reset state
     setIsSessionResumeModalOpen(false);
     setSavedSession(null);
     setActiveTab('home');

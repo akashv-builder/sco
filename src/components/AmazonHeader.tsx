@@ -30,15 +30,29 @@ const AmazonHeader: React.FC = () => {
 
     checkSession();
     
-    // Listen for storage changes to update session status
-    const handleStorageChange = () => {
+    // Listen for storage changes from other tabs/windows
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'amazonSession') {
+        checkSession();
+      }
+    };
+    
+    // Listen for custom events from the app for immediate updates
+    const handleSessionUpdate = () => {
       checkSession();
     };
     
     window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(checkSession, 10000); // Check every 10 seconds
+    window.addEventListener('sessionUpdated', handleSessionUpdate);
     
-    return () => clearInterval(interval);
+    // Reduced polling frequency since we now have event-driven updates
+    const interval = setInterval(checkSession, 30000); // Check every 30 seconds
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('sessionUpdated', handleSessionUpdate);
+    };
   }, []);
 
   return (
