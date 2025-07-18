@@ -54,6 +54,8 @@ const ScanModal: React.FC<ScanModalProps> = ({
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [scanSuccess, setScanSuccess] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [isPrimeMember] = useState(true); // Simulate Prime membership
+  const [primeDealsApplied, setPrimeDealsApplied] = useState<{[key: string]: number}>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +74,16 @@ const ScanModal: React.FC<ScanModalProps> = ({
     // Simulate scanning delay
     setTimeout(() => {
       const randomProduct = products[Math.floor(Math.random() * products.length)];
+      
+      // Apply Prime deals to certain products
+      if (isPrimeMember && Math.random() > 0.6) {
+        const discount = Math.floor(Math.random() * 20) + 5; // 5-25% discount
+        setPrimeDealsApplied(prev => ({
+          ...prev,
+          [randomProduct.id]: discount
+        }));
+      }
+      
       setScannedProduct(randomProduct);
       setScanSuccess(true);
       setIsScanning(false);
@@ -103,18 +115,31 @@ const ScanModal: React.FC<ScanModalProps> = ({
 
   if (!isOpen) return null;
 
+  const currentPrimeDiscount = scannedProduct ? primeDealsApplied[scannedProduct.id] : 0;
+  const discountedPrice = scannedProduct && currentPrimeDiscount 
+    ? scannedProduct.price * (1 - currentPrimeDiscount / 100)
+    : scannedProduct?.price || 0;
+
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg w-full max-w-md">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div>
-            <h2 className="text-xl font-bold text-gray-800">Self Checkout</h2>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-bold text-gray-800">Self Checkout</h2>
+              {isPrimeMember && (
+                <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">prime</span>
+              )}
+            </div>
             {hasActiveSession && (
               <div className="mt-1">
                 <div className="flex items-center space-x-2 mb-1">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="text-xs text-green-600 font-medium">Session Active</span>
+                  {isPrimeMember && (
+                    <span className="text-xs text-blue-600 font-medium">• Prime Benefits Active</span>
+                  )}
                 </div>
                 <SessionTimer />
               </div>
@@ -127,6 +152,24 @@ const ScanModal: React.FC<ScanModalProps> = ({
             <X className="w-6 h-6" />
           </button>
         </div>
+
+        {/* Prime Benefits Banner */}
+        {isPrimeMember && hasActiveSession && (
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 mx-4 mt-4 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center space-x-2 mb-1">
+                  <span className="bg-white text-blue-600 px-2 py-0.5 rounded text-xs font-bold">prime</span>
+                  <span className="text-sm font-medium">Member Benefits Active</span>
+                </div>
+                <div className="text-xs opacity-90">
+                  • Exclusive deals on select items • Priority checkout • Member rewards
+                </div>
+              </div>
+              <div className="text-2xl">⭐</div>
+            </div>
+          </div>
+        )}
 
         {/* Scan Area */}
         <div className="p-6">
@@ -147,6 +190,16 @@ const ScanModal: React.FC<ScanModalProps> = ({
               <p className="text-gray-600 mb-4">
                 Position the barcode within the frame and tap scan
               </p>
+              {isPrimeMember && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">prime</span>
+                    <span className="text-sm text-blue-700 font-medium">
+                      Scan for exclusive Prime deals!
+                    </span>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={simulateBarcodeScan}
                 className="bg-amazon-orange hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
@@ -167,7 +220,12 @@ const ScanModal: React.FC<ScanModalProps> = ({
                   <div className="absolute inset-0 border-2 border-amazon-orange rounded-lg animate-pulse"></div>
                 </div>
               </div>
-              <p className="text-amazon-orange font-medium">Scanning barcode...</p>
+              <div className="space-y-2">
+                <p className="text-amazon-orange font-medium">Scanning barcode...</p>
+                {isPrimeMember && (
+                  <p className="text-blue-600 text-sm">Checking for Prime deals...</p>
+                )}
+              </div>
             </div>
           )}
 
@@ -176,6 +234,16 @@ const ScanModal: React.FC<ScanModalProps> = ({
               <div className="bg-green-50 rounded-lg p-4 mb-4">
                 <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
                 <p className="text-green-700 font-medium">Product scanned successfully!</p>
+                {currentPrimeDiscount > 0 && (
+                  <div className="mt-2 bg-blue-100 border border-blue-200 rounded-lg p-2">
+                    <div className="flex items-center justify-center space-x-2">
+                      <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">prime</span>
+                      <span className="text-blue-700 text-sm font-medium">
+                        {currentPrimeDiscount}% Prime Member Discount Applied!
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="bg-white border rounded-lg p-4 mb-4 text-left">
@@ -192,12 +260,29 @@ const ScanModal: React.FC<ScanModalProps> = ({
                       <span className="text-yellow-500">★</span>
                       <span className="text-sm">{scannedProduct.rating}</span>
                       <span className="text-sm text-gray-500">({scannedProduct.reviews})</span>
+                      {currentPrimeDiscount > 0 && (
+                        <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">prime</span>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-amazon-orange">
-                      ${scannedProduct.price.toLocaleString()}
-                    </div>
+                    {currentPrimeDiscount > 0 ? (
+                      <div>
+                        <div className="text-sm text-gray-500 line-through">
+                          ${scannedProduct.price.toFixed(2)}
+                        </div>
+                        <div className="text-lg font-bold text-blue-600">
+                          ${discountedPrice.toFixed(2)}
+                        </div>
+                        <div className="text-xs bg-blue-100 text-blue-700 px-1 py-0.5 rounded">
+                          Save ${(scannedProduct.price - discountedPrice).toFixed(2)}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-lg font-bold text-amazon-orange">
+                        ${scannedProduct.price.toFixed(2)}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -205,15 +290,26 @@ const ScanModal: React.FC<ScanModalProps> = ({
               <div className="flex space-x-3">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-amazon-orange hover:bg-orange-600 text-white py-3 rounded-lg font-medium transition-colors"
+                  className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
+                    currentPrimeDiscount > 0 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'bg-amazon-orange hover:bg-orange-600 text-white'
+                  }`}
                 >
                   <ShoppingCart className="w-5 h-5 inline mr-2" />
-                  Add to Cart
+                  {currentPrimeDiscount > 0 ? 'Add with Prime Discount' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={() => {
                     setScannedProduct(null);
                     setScanSuccess(false);
+                    setPrimeDealsApplied(prev => {
+                      const updated = { ...prev };
+                      if (scannedProduct) {
+                        delete updated[scannedProduct.id];
+                      }
+                      return updated;
+                    });
                   }}
                   className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg font-medium transition-colors"
                 >
