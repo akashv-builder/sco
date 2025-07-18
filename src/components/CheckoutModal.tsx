@@ -349,12 +349,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>Shipping:</span>
-                    <span className={isPrimeMember ? 'text-blue-600 font-medium' : ''}>
-                      {shipping === 0 ? (isPrimeMember ? 'FREE with Prime' : 'FREE') : `$${shipping.toFixed(2)}`}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
                     <span>Tax:</span>
                     <span>${tax.toFixed(2)}</span>
                   </div>
