@@ -494,10 +494,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>Shipping & Handling:</span>
-                    <span>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
-                  </div>
-                  <div className="flex justify-between">
                     <span>Tax (8.75%):</span>
                     <span>${tax.toFixed(2)}</span>
                   </div>
