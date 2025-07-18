@@ -163,7 +163,7 @@ const ScanModal: React.FC<ScanModalProps> = ({
                   <span className="text-sm font-medium">Member Benefits Active</span>
                 </div>
                 <div className="text-xs opacity-90">
-                  • Exclusive deals on select items • Priority checkout • Member rewards
+                  • Exclusive deals on select items • Member rewards
                 </div>
               </div>
               <div className="text-2xl">⭐</div>
